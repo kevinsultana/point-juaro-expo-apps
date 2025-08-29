@@ -5,29 +5,59 @@ import {
   FlatList,
   Pressable,
   Image,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useCart } from "../../contexts/CartContext";
 import { formatIDR } from "../../utils/formatIDR";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useAuth } from "../../contexts/auth-contexts";
+import { db } from "../../lib/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { useState } from "react";
 
 export default function Cart() {
-  const { cartItems, updateQuantity, removeFromCart } = useCart();
+  const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart();
+  const { userData: userProfile } = useAuth();
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const subTotal = cartItems.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   );
 
-  const handlePreparePayment = () => {
-    // Di aplikasi mobile, kita langsung siapkan datanya saja
-    // Lalu navigasi ke halaman pending transaction
-    // Logika pembuatan dokumen di Firestore akan ada di sana
-    router.push({
-      pathname: "/pending-transaction/new",
-      params: { cart: JSON.stringify(cartItems) },
-    });
+  const handlePreparePayment = async () => {
+    if (!userProfile || cartItems.length === 0) {
+      Alert.alert("Error", "Anda harus login dan memiliki item di keranjang.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const pendingTransactionRef = await addDoc(
+        collection(db, "pendingTransactions"),
+        {
+          customerId: userProfile.uid,
+          merchantId: cartItems[0].merchantId,
+          items: cartItems,
+          totalAmount: subTotal,
+          createdAt: serverTimestamp(),
+          status: "pending",
+        }
+      );
+
+      clearCart();
+
+      router.push(`/pending-transaction/${pendingTransactionRef.id}`);
+    } catch (error) {
+      console.error("Error preparing payment:", error);
+      Alert.alert("Error", "Gagal menyiapkan pembayaran, coba lagi.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -68,12 +98,20 @@ export default function Cart() {
         <View style={styles.summaryContainer}>
           <Text style={styles.totalText}>Total: {formatIDR(subTotal)}</Text>
           <Pressable
-            style={styles.checkoutButton}
+            style={[
+              styles.checkoutButton,
+              loading && styles.checkoutButtonDisabled,
+            ]}
             onPress={handlePreparePayment}
+            disabled={loading}
           >
-            <Text style={styles.checkoutButtonText}>
-              Siapkan QR untuk Pembayaran
-            </Text>
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.checkoutButtonText}>
+                Siapkan QR untuk Pembayaran
+              </Text>
+            )}
           </Pressable>
         </View>
       )}
@@ -146,6 +184,9 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 12,
     alignItems: "center",
+  },
+  checkoutButtonDisabled: {
+    backgroundColor: "#166534",
   },
   checkoutButtonText: {
     color: "white",

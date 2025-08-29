@@ -238,11 +238,13 @@ export default function Home() {
                       </Text>
                     </View>
                     <View style={s.qrWrap}>
-                      <QRCode
-                        value={qrValue}
-                        size={88}
-                        backgroundColor="transparent"
-                      />
+                      {qrValue !== "" && (
+                        <QRCode
+                          value={qrValue}
+                          size={88}
+                          backgroundColor="transparent"
+                        />
+                      )}
                     </View>
                   </View>
                   <View style={s.cardFooter}>

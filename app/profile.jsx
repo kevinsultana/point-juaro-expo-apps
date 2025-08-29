@@ -7,7 +7,12 @@ export default function Profile() {
   const router = useRouter();
 
   const handleSignOut = () =>
-    signOut(auth).then(() => router.replace("/(auth)/sign-in"));
+    signOut(auth).then(() => {
+      // router.replace("/(auth)/sign-in")
+      router.dismissAll(() => {
+        router.replace("/(auth)/sign-in");
+      });
+    });
 
   return (
     <View style={styles.container}>
