@@ -1,36 +1,136 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   Pressable,
   ScrollView,
-  StatusBar,
   SafeAreaView,
   Image,
+  TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import QRCode from "react-native-qrcode-svg";
 import { formatIDR } from "../../utils/formatIDR";
 import { formatIndoDate } from "../../utils/formatDate";
+import { useAuth } from "../../contexts/auth-contexts";
+import {
+  collection,
+  doc,
+  getDoc,
+  onSnapshot,
+  query,
+  where,
+  orderBy,
+  limit,
+} from "firebase/firestore";
+import { db } from "../../lib/firebase";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("Home");
-  const storeName = "toko buku";
-  const points = 11;
-  const memberName = "Nama Member";
-  const memberEmail = "customer1@mail.com";
-  const lastTx = {
-    date: "2025-08-28",
-    amount: 116550,
-    points: 11,
-  };
+  const [activeIndex, setActiveIndex] = useState(0);
+  const { user, userData } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [memberships, setMemberships] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  // membership aktif
+  const activeMembership = memberships[activeIndex] ?? null;
+
+  // transaksi terakhir untuk merchant aktif
+  const visibleTransactions = useMemo(() => {
+    if (!activeMembership) return [];
+    return transactions
+      .filter((t) => t.merchantId === activeMembership.merchantId)
+      .sort((a, b) => {
+        const ta = a.createdAt?.toMillis?.() ?? 0;
+        const tb = b.createdAt?.toMillis?.() ?? 0;
+        return tb - ta; // terbaru di atas
+      });
+  }, [transactions, activeMembership]);
+
+  useEffect(() => {
+    if (!user?.uid) {
+      setLoading(false);
+      setMemberships([]);
+      setTransactions([]);
+      return;
+    }
+
+    setLoading(true);
+    setErrorMsg("");
+
+    // --- memberships: users/{uid}/memberships ---
+    const membershipsQuery = query(
+      collection(db, "users", user.uid, "memberships")
+    );
+    const unsubMemberships = onSnapshot(
+      membershipsQuery,
+      async (snapshot) => {
+        try {
+          const memberListPromises = snapshot.docs.map(async (docSnapshot) => {
+            const membershipData = docSnapshot.data();
+            const merchantRef = doc(db, "merchants", membershipData.merchantId);
+            const merchantSnap = await getDoc(merchantRef);
+            const merchant = merchantSnap.exists() ? merchantSnap.data() : {};
+            return {
+              id: docSnapshot.id,
+              ...membershipData,
+              merchantName: merchant?.name ?? "Merchant",
+              promotionType: merchant?.promotionSettings?.type ?? "point",
+            };
+          });
+          const memberList = await Promise.all(memberListPromises);
+          setMemberships(memberList);
+          setActiveIndex((idx) => (memberList[idx] ? idx : 0)); // jaga2 kalau jumlah berubah
+        } catch (e) {
+          setErrorMsg(e.message ?? "Gagal memuat memberships");
+        } finally {
+          setLoading(false);
+        }
+      },
+      (err) => {
+        setErrorMsg(err.message ?? "Gagal memuat memberships");
+        setLoading(false);
+      }
+    );
+
+    // --- transactions milik user ---
+    // jika mau yang terbaru dulu, bisa pakai orderBy + limit, tapi biasanya minta index komposit:
+    // query(collection(db,"transactions"), where("customerId","==",user.uid), orderBy("createdAt","desc"), limit(50))
+    const transactionsQuery = query(
+      collection(db, "transactions"),
+      where("customerId", "==", user.uid)
+    );
+    const unsubTransactions = onSnapshot(
+      transactionsQuery,
+      (snapshot) => {
+        const history = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+        setTransactions(history);
+      },
+      (err) => setErrorMsg(err.message ?? "Gagal memuat transaksi")
+    );
+
+    return () => {
+      unsubMemberships();
+      unsubTransactions();
+    };
+  }, [user?.uid]);
+
+  // data untuk kartu
+  const storeName = activeMembership?.merchantName ?? "—";
+  const points = activeMembership?.points ?? 0;
+  const stamps = activeMembership?.stamps ?? 0;
+  const memberEmail = user?.name ?? "";
+  const qrValue = `${user?.uid ?? ""}`;
+  const userName = userData?.name ?? "";
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View style={s.screen}>
-        {/* <StatusBar barStyle="light-content" /> */}
         {/* Header */}
         <View style={s.header}>
           <View style={s.brandWrap}>
@@ -45,9 +145,9 @@ export default function Home() {
                 color="#0f172a"
               />
             </Pressable>
-            <Pressable style={s.iconBtn}>
+            <TouchableOpacity onPress={() => {}} style={s.iconBtn}>
               <Ionicons name="person-outline" size={20} color="#0f172a" />
-            </Pressable>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -84,77 +184,150 @@ export default function Home() {
           </Pressable>
         </View>
 
-        <ScrollView
-          contentContainerStyle={{ paddingBottom: 28 }}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Loyalty Card */}
-          <LinearGradient
-            colors={["#22c55e", "#0ea5e9"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={s.card}
+        {loading ? (
+          <View
+            style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
           >
-            <View style={s.cardHeader}>
-              <Text style={s.cardStore}>{storeName}</Text>
-              <Text style={s.cardBadge}>Points</Text>
-            </View>
-
-            <View style={s.cardMiddle}>
-              <View style={{ flex: 1 }}>
-                <Text style={s.pointValue}>{points}</Text>
-                <Text style={s.pointLabel}>Poin</Text>
+            <ActivityIndicator color="#fff" />
+            <Text style={{ color: "#94a3b8", marginTop: 8 }}>Memuat data…</Text>
+          </View>
+        ) : memberships.length === 0 ? (
+          <View
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 24,
+            }}
+          >
+            <Text style={{ color: "white", fontSize: 16, textAlign: "center" }}>
+              Kamu belum punya membership. Scan QR toko untuk bergabung.
+            </Text>
+          </View>
+        ) : (
+          <ScrollView
+            contentContainerStyle={{ paddingBottom: 28 }}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Loyalty Card */}
+            <LinearGradient
+              colors={["#22c55e", "#0ea5e9"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={s.card}
+            >
+              <View style={s.cardHeader}>
+                <Text style={s.cardStore}>{storeName}</Text>
+                <Text style={s.cardBadge}>
+                  {activeMembership?.promotionType === "stamp"
+                    ? "Stamps"
+                    : "Points"}
+                </Text>
               </View>
 
-              <View style={s.qrWrap}>
-                <QRCode
-                  value={`${memberEmail} | ${storeName}`}
-                  size={88}
-                  backgroundColor="transparent"
+              <View style={s.cardMiddle}>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.pointValue}>
+                    {activeMembership?.promotionType === "stamp"
+                      ? `${stamps}`
+                      : `${points}`}
+                  </Text>
+                  <Text style={s.pointLabel}>
+                    {activeMembership?.promotionType === "stamp"
+                      ? "Stamps"
+                      : "Poin"}
+                  </Text>
+                </View>
+
+                <View style={s.qrWrap}>
+                  <QRCode
+                    value={qrValue}
+                    size={88}
+                    backgroundColor="transparent"
+                  />
+                </View>
+              </View>
+
+              <View style={s.cardFooter}>
+                <View>
+                  <Text style={s.memberLabel}>Nama Member</Text>
+                  <Text style={s.memberEmail}>{userName}</Text>
+                </View>
+              </View>
+            </LinearGradient>
+
+            {/* Dots: jumlah = memberships.length */}
+            <View style={s.dots}>
+              {memberships.map((m, i) => (
+                <Pressable
+                  key={m.id}
+                  onPress={() => setActiveIndex(i)}
+                  style={[s.dot, i === activeIndex && s.dotActive]}
                 />
+              ))}
+            </View>
+
+            <Text style={s.sectionTitle}>Riwayat Transaksi di {storeName}</Text>
+
+            {visibleTransactions.length === 0 ? (
+              <View
+                style={[
+                  s.txCard,
+                  { alignItems: "center", justifyContent: "center" },
+                ]}
+              >
+                <Text style={{ color: "#94a3b8" }}>Belum ada transaksi.</Text>
               </View>
-            </View>
+            ) : (
+              visibleTransactions.map((t) => (
+                <View key={t.id} style={[s.txCard, { marginBottom: 10 }]}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.txDate}>
+                      {formatIndoDate(
+                        t.createdAt?.toDate ? t.createdAt.toDate() : t.createdAt
+                      )}
+                    </Text>
+                    <Text style={s.txAmount}>{formatIDR(t.amount ?? 0)}</Text>
+                  </View>
+                  {t.points && (
+                    <Text style={s.txPoint}>
+                      {(t.points ?? 0) >= 0
+                        ? `+${t.points ?? 0}`
+                        : `${t.points ?? 0}`}{" "}
+                      Poin
+                    </Text>
+                  )}
+                  {t.stamps && (
+                    <Text style={s.txPoint}>
+                      {(t.stamps ?? 0) >= 0
+                        ? `+${t.stamps ?? 0}`
+                        : `${t.stamps ?? 0}`}{" "}
+                      Poin
+                    </Text>
+                  )}
+                </View>
+              ))
+            )}
 
-            <View style={s.cardFooter}>
-              <View>
-                <Text style={s.memberLabel}>Nama Member</Text>
-                <Text style={s.memberEmail}>{memberEmail}</Text>
-              </View>
-            </View>
-          </LinearGradient>
-
-          {/* Carousel dots (dummy) */}
-          <View style={s.dots}>
-            <View style={[s.dot, s.dotActive]} />
-            <View style={s.dot} />
-          </View>
-
-          {/* History Section */}
-          <Text style={s.sectionTitle}>Riwayat Transaksi di {storeName}</Text>
-
-          <View style={s.txCard}>
-            <View style={{ flex: 1 }}>
-              <Text style={s.txDate}>{formatIndoDate(lastTx.date)}</Text>
-              <Text style={s.txAmount}>{formatIDR(lastTx.amount)}</Text>
-            </View>
-            <Text style={s.txPoint}>+{lastTx.points} Poin</Text>
-          </View>
-        </ScrollView>
+            {!!errorMsg && (
+              <Text style={{ color: "#fca5a5", marginTop: 8 }}>
+                Error: {errorMsg}
+              </Text>
+            )}
+          </ScrollView>
+        )}
       </View>
     </SafeAreaView>
   );
 }
 
-/* ===== Styles ===== */
 const s = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#0b1222", // navy gelap
+    backgroundColor: "#0b1222",
     paddingHorizontal: 12,
     paddingTop: 20,
   },
-
-  /* Header */
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -178,8 +351,6 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-
-  /* Segmented */
   segmentWrap: {
     flexDirection: "row",
     backgroundColor: "#121a2d",
@@ -195,13 +366,9 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  segmentBtnActive: {
-    backgroundColor: "#2563eb",
-  },
+  segmentBtnActive: { backgroundColor: "#2563eb" },
   segmentText: { color: "#94a3b8", fontWeight: "700", fontSize: 16 },
   segmentTextActive: { color: "white" },
-
-  /* Card */
   card: {
     borderRadius: 18,
     padding: 16,
@@ -215,11 +382,7 @@ const s = StyleSheet.create({
   cardHeader: { flexDirection: "row", justifyContent: "space-between" },
   cardStore: { color: "white", fontSize: 20, fontWeight: "800" },
   cardBadge: { color: "white", opacity: 0.9, fontWeight: "700" },
-  cardMiddle: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 12,
-  },
+  cardMiddle: { flexDirection: "row", alignItems: "center", marginTop: 12 },
   pointValue: {
     color: "white",
     fontSize: 40,
@@ -227,16 +390,10 @@ const s = StyleSheet.create({
     lineHeight: 44,
   },
   pointLabel: { color: "white", opacity: 0.9, marginTop: -4 },
-  qrWrap: {
-    backgroundColor: "white",
-    padding: 8,
-    borderRadius: 10,
-  },
+  qrWrap: { backgroundColor: "white", padding: 8, borderRadius: 10 },
   cardFooter: { marginTop: 18 },
   memberLabel: { color: "white", opacity: 0.8, marginBottom: 2 },
   memberEmail: { color: "white", fontWeight: "700" },
-
-  /* Dots */
   dots: {
     flexDirection: "row",
     justifyContent: "center",
@@ -244,15 +401,8 @@ const s = StyleSheet.create({
     marginTop: 10,
     marginBottom: 8,
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#334155",
-  },
+  dot: { width: 12, height: 12, borderRadius: 4, backgroundColor: "#334155" },
   dotActive: { backgroundColor: "#94a3b8" },
-
-  /* Section & Tx */
   sectionTitle: {
     color: "white",
     fontSize: 20,

@@ -1,23 +1,57 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { auth } from "../lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { doc, onSnapshot } from "firebase/firestore";
+import { auth, db } from "../lib/firebase";
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [userData, setUserData] = useState(null);
   const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
+    let unsubUserDoc = null;
+
+    const unsubAuth = onAuthStateChanged(auth, (u) => {
       setUser(u);
-      setInitializing(false);
+
+      // matikan listener lama kalau ada
+      if (unsubUserDoc) {
+        unsubUserDoc();
+        unsubUserDoc = null;
+      }
+
+      if (!u) {
+        setUserData(null);
+        setInitializing(false);
+        return;
+      }
+
+      // realtime listen ke profil user
+      const ref = doc(db, "users", u.uid);
+      unsubUserDoc = onSnapshot(
+        ref,
+        (snap) => {
+          setUserData(snap.exists() ? { id: snap.id, ...snap.data() } : null);
+          setInitializing(false);
+        },
+        (err) => {
+          console.warn("users onSnapshot error:", err);
+          setUserData(null);
+          setInitializing(false);
+        }
+      );
     });
-    return unsub;
+
+    return () => {
+      unsubAuth();
+      if (unsubUserDoc) unsubUserDoc();
+    };
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, initializing }}>
+    <AuthContext.Provider value={{ user, userData, initializing }}>
       {children}
     </AuthContext.Provider>
   );
