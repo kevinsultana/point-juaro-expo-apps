@@ -30,6 +30,7 @@ export default function TabsLayout() {
         name="shop"
         options={{
           title: "Shop",
+          headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "basket" : "basket-outline"}

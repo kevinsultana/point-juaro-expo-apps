@@ -1,6 +1,5 @@
 import { signOut } from "firebase/auth";
 import { View, Text, StyleSheet, Pressable } from "react-native";
-
 import { useRouter } from "expo-router";
 import { auth } from "../lib/firebase";
 
@@ -13,7 +12,7 @@ export default function Profile() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Profile</Text>
-      <Text>Nama: Guest</Text>
+      <Text style={styles.title}>Nama: Guest</Text>
       <Pressable style={styles.btn} onPress={handleSignOut}>
         <Text style={styles.btnText}>Log out</Text>
       </Pressable>
@@ -33,6 +32,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 16,
+    backgroundColor: "#0b1222",
   },
-  title: { fontSize: 20, fontWeight: "700", marginBottom: 8 },
+  title: { fontSize: 20, fontWeight: "700", marginBottom: 8, color: "white" },
 });

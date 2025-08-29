@@ -9,6 +9,7 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -28,6 +29,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("Home");
@@ -85,7 +87,7 @@ export default function Home() {
           });
           const memberList = await Promise.all(memberListPromises);
           setMemberships(memberList);
-          setActiveIndex((idx) => (memberList[idx] ? idx : 0)); // jaga2 kalau jumlah berubah
+          setActiveIndex((idx) => (memberList[idx] ? idx : 0));
         } catch (e) {
           setErrorMsg(e.message ?? "Gagal memuat memberships");
         } finally {
@@ -117,7 +119,6 @@ export default function Home() {
     };
   }, [user?.uid]);
 
-  // data untuk kartu
   const storeName = activeMembership?.merchantName ?? "—";
   const points = activeMembership?.points ?? 0;
   const stamps = activeMembership?.stamps ?? 0;
@@ -325,7 +326,7 @@ const s = StyleSheet.create({
     flex: 1,
     backgroundColor: "#0b1222",
     paddingHorizontal: 12,
-    paddingTop: 20,
+    paddingTop: 10,
   },
   header: {
     flexDirection: "row",
