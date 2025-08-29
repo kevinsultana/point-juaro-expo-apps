@@ -27,6 +27,7 @@ import {
   limit,
 } from "firebase/firestore";
 import { db } from "../../lib/firebase";
+import { useRouter } from "expo-router";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("Home");
@@ -37,10 +38,10 @@ export default function Home() {
   const [transactions, setTransactions] = useState([]);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // membership aktif
+  const router = useRouter();
+
   const activeMembership = memberships[activeIndex] ?? null;
 
-  // transaksi terakhir untuk merchant aktif
   const visibleTransactions = useMemo(() => {
     if (!activeMembership) return [];
     return transactions
@@ -63,7 +64,6 @@ export default function Home() {
     setLoading(true);
     setErrorMsg("");
 
-    // --- memberships: users/{uid}/memberships ---
     const membershipsQuery = query(
       collection(db, "users", user.uid, "memberships")
     );
@@ -98,9 +98,6 @@ export default function Home() {
       }
     );
 
-    // --- transactions milik user ---
-    // jika mau yang terbaru dulu, bisa pakai orderBy + limit, tapi biasanya minta index komposit:
-    // query(collection(db,"transactions"), where("customerId","==",user.uid), orderBy("createdAt","desc"), limit(50))
     const transactionsQuery = query(
       collection(db, "transactions"),
       where("customerId", "==", user.uid)
@@ -124,7 +121,6 @@ export default function Home() {
   const storeName = activeMembership?.merchantName ?? "—";
   const points = activeMembership?.points ?? 0;
   const stamps = activeMembership?.stamps ?? 0;
-  const memberEmail = user?.name ?? "";
   const qrValue = `${user?.uid ?? ""}`;
   const userName = userData?.name ?? "";
 
@@ -145,7 +141,10 @@ export default function Home() {
                 color="#0f172a"
               />
             </Pressable>
-            <TouchableOpacity onPress={() => {}} style={s.iconBtn}>
+            <TouchableOpacity
+              onPress={() => router.push("/profile")}
+              style={s.iconBtn}
+            >
               <Ionicons name="person-outline" size={20} color="#0f172a" />
             </TouchableOpacity>
           </View>

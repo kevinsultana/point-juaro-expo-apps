@@ -1,10 +1,9 @@
 import { View, Text, StyleSheet } from "react-native";
 
-export default function History() {
+export default function Cart() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>History</Text>
-      <Text>Belum ada data.</Text>
+      <Text style={styles.title}>Cart</Text>
     </View>
   );
 }
@@ -14,6 +13,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 16,
+    backgroundColor: "#0b1222",
   },
-  title: { fontSize: 20, fontWeight: "700", marginBottom: 8 },
+  title: { fontSize: 20, fontWeight: "700", marginBottom: 8, color: "white" },
 });

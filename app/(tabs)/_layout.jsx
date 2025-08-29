@@ -8,14 +8,15 @@ export default function TabsLayout() {
         headerTitleAlign: "center",
         headerStyle: { backgroundColor: "#0b1222" },
         headerTintColor: "white",
-        sceneStyle: { backgroundColor: "#0b1222" },
         tabBarStyle: { backgroundColor: "#0b1222" },
+        tabBarActiveTintColor: "#22c55e",
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           headerShown: false,
+          tabBarLabel: "Home",
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "home" : "home-outline"}
@@ -26,12 +27,12 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="history"
+        name="shop"
         options={{
-          title: "History",
+          title: "Shop",
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
-              name={focused ? "time" : "time-outline"}
+              name={focused ? "basket" : "basket-outline"}
               size={size}
               color={color}
             />
@@ -39,12 +40,25 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="cart"
         options={{
-          title: "Profile",
+          title: "Cart",
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
-              name={focused ? "person" : "person-outline"}
+              name={focused ? "cart" : "cart-outline"}
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="orders"
+        options={{
+          title: "Orders",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "receipt" : "receipt-outline"}
               size={size}
               color={color}
             />

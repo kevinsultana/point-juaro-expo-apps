@@ -1,7 +1,8 @@
 import { signOut } from "firebase/auth";
 import { View, Text, StyleSheet, Pressable } from "react-native";
-import { auth } from "../../lib/firebase";
+
 import { useRouter } from "expo-router";
+import { auth } from "../lib/firebase";
 
 export default function Profile() {
   const router = useRouter();
