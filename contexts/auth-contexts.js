@@ -16,7 +16,6 @@ export function AuthProvider({ children }) {
     const unsubAuth = onAuthStateChanged(auth, (u) => {
       setUser(u);
 
-      // matikan listener lama kalau ada
       if (unsubUserDoc) {
         unsubUserDoc();
         unsubUserDoc = null;
@@ -28,7 +27,6 @@ export function AuthProvider({ children }) {
         return;
       }
 
-      // realtime listen ke profil user
       const ref = doc(db, "users", u.uid);
       unsubUserDoc = onSnapshot(
         ref,

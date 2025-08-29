@@ -16,7 +16,6 @@ export default function RootLayout() {
       ) : (
         <>
           <View style={{ height: insets.top, backgroundColor: "#0b1222" }} />
-
           <StatusBar style="light" />
         </>
       )}
