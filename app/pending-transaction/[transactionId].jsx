@@ -18,6 +18,7 @@ import { db } from "../../lib/firebase";
 import QRCode from "react-native-qrcode-svg";
 import { useAuth } from "../../contexts/auth-contexts";
 import { useCart } from "../../contexts/CartContext";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function PendingTransactionPage() {
   const { transactionId } = useLocalSearchParams();

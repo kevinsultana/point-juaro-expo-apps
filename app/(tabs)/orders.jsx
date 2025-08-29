@@ -15,7 +15,7 @@ import { formatIDR } from "../../utils/formatIDR";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function Orders() {
-  const { userProfile } = useAuth();
+  const { userData: userProfile } = useAuth();
   const [pendingOrders, setPendingOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
