@@ -150,12 +150,6 @@ export default function Home() {
                 color="#0f172a"
               />
             </Pressable>
-            <TouchableOpacity
-              onPress={() => router.push("/profile")}
-              style={s.iconBtn}
-            >
-              <Ionicons name="person-outline" size={20} color="#0f172a" />
-            </TouchableOpacity>
           </View>
         </View>
 
