@@ -24,10 +24,10 @@ export default function SignUp() {
         email.trim(),
         pass
       );
-      // contoh: simpan profil minimal
       await setDoc(doc(db, "users", cred.user.uid), {
         email: cred.user.email,
         createdAt: serverTimestamp(),
+        role: "customer",
       });
       router.replace("/(tabs)");
     } catch (e) {

@@ -11,10 +11,10 @@ import {
   FlatList,
   ActivityIndicator,
 } from "react-native";
-import { db } from "../../lib/firebase";
+
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-
+import { db } from "../../../lib/firebase";
 // Komponen terpisah untuk setiap item merchant
 const MerchantItem = ({ merchant }) => {
   const router = useRouter();
@@ -60,7 +60,7 @@ export default function Shop() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.brandWrap}>
-            <Image source={require("../../assets/logo.png")} />
+            <Image source={require("../../../assets/logo.png")} />
           </View>
           <View style={styles.headerActions}>
             <Pressable style={styles.iconBtn}>

@@ -1,7 +1,9 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useCart } from "../../contexts/CartContext";
 
 export default function TabsLayout() {
+  const { cartCount } = useCart();
   return (
     <Tabs
       screenOptions={{
@@ -44,6 +46,7 @@ export default function TabsLayout() {
         name="cart"
         options={{
           title: "Cart",
+          tabBarBadge: cartCount > 0 ? cartCount : undefined,
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "cart" : "cart-outline"}

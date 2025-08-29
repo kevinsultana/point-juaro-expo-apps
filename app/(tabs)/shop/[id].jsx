@@ -7,30 +7,49 @@ import {
   Image,
   SafeAreaView,
   FlatList,
+  TouchableOpacity,
+  Alert,
 } from "react-native";
-import { useLocalSearchParams, Stack } from "expo-router";
+import { useLocalSearchParams, Stack, useRouter } from "expo-router";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
-import { db } from "../../lib/firebase";
-import { formatIDR } from "../../utils/formatIDR";
+import { useCart } from "../../../contexts/CartContext";
+import { db } from "../../../lib/firebase";
+import { formatIDR } from "../../../utils/formatIDR";
+import { Ionicons } from "@expo/vector-icons";
 
-const ProductItem = ({ item }) => (
-  <View style={styles.productCard}>
+const ProductItem = ({ item, onAddToCart }) => (
+  <TouchableOpacity
+    onPress={() => onAddToCart(item)}
+    style={styles.productCard}
+  >
     <Image source={{ uri: item.imgUrl }} style={styles.productImage} />
     <View style={styles.productInfo}>
       <Text style={styles.productName}>{item.name}</Text>
       <Text style={styles.productPrice}>{formatIDR(item.price)}</Text>
     </View>
-  </View>
+    <View style={styles.addBtn}>
+      <Text style={styles.addBtnText}>+ Tambah</Text>
+    </View>
+  </TouchableOpacity>
 );
 
+// --- MerchantDetail Component ---
 export default function MerchantDetail() {
   const { id } = useLocalSearchParams();
   const [merchant, setMerchant] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { addToCart } = useCart(); // Gunakan addToCart dari context
+  const router = useRouter();
+
+  const handleAddToCart = (product) => {
+    addToCart(product, id);
+    Alert.alert("Berhasil", `${product.name} telah ditambahkan ke keranjang.`);
+  };
 
   const getMerchantData = async () => {
+    // ... (Fungsi ini tidak berubah)
     setLoading(true);
     setError(null);
     try {
@@ -87,14 +106,25 @@ export default function MerchantDetail() {
       <Stack.Screen
         options={{
           title: merchant?.name || "Detail Toko",
+          headerShown: true, // Tampilkan header
           headerStyle: { backgroundColor: "#0b1222" },
           headerTintColor: "white",
           headerTitleAlign: "center",
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ marginLeft: 10 }}
+            >
+              <Ionicons name="arrow-back" size={24} color="white" />
+            </TouchableOpacity>
+          ),
         }}
       />
       <FlatList
         data={products}
-        renderItem={ProductItem}
+        renderItem={({ item }) => (
+          <ProductItem item={item} onAddToCart={handleAddToCart} />
+        )}
         keyExtractor={(item) => item.id}
         ListEmptyComponent={
           <Text style={styles.emptyText}>Belum ada produk.</Text>
@@ -107,6 +137,7 @@ export default function MerchantDetail() {
   );
 }
 
+// --- Styles ---
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -119,36 +150,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#0b1222",
   },
   container: {
-    paddingHorizontal: 20,
-  },
-  headerContainer: {
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  logo: {
-    width: 100,
-    height: 100,
-    borderRadius: 15,
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "white",
-    marginBottom: 4,
-  },
-  address: {
-    fontSize: 14,
-    color: "#94a3b8",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "white",
-    alignSelf: "flex-start",
-    marginBottom: 10,
+    padding: 16,
   },
   errorText: {
     color: "#fca5a5",
@@ -158,7 +160,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 20,
   },
-  // Style untuk setiap kartu produk
   productCard: {
     backgroundColor: "#1e293b",
     borderRadius: 12,
@@ -185,5 +186,16 @@ const styles = StyleSheet.create({
     color: "#94a3b8",
     fontSize: 14,
     marginTop: 4,
+  },
+  addBtn: {
+    backgroundColor: "#2563eb",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  addBtnText: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 12,
   },
 });

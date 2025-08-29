@@ -6,7 +6,6 @@ const CartContext = createContext();
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
 
-  // Cek jika produk berasal dari merchant yang berbeda
   const isDifferentMerchant = (merchantId) => {
     return cartItems.length > 0 && cartItems[0].merchantId !== merchantId;
   };
@@ -50,21 +49,20 @@ export function CartProvider({ children }) {
   };
 
   const updateQuantity = (id, type) => {
-    setCartItems(
-      (prev) =>
-        prev
-          .map((item) =>
-            item.id === id
-              ? {
-                  ...item,
-                  quantity:
-                    type === "increase"
-                      ? item.quantity + 1
-                      : Math.max(1, item.quantity - 1),
-                }
-              : item
-          )
-          .filter((item) => item.quantity > 0) // Hapus item jika kuantitas 0
+    setCartItems((prev) =>
+      prev
+        .map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                quantity:
+                  type === "increase"
+                    ? item.quantity + 1
+                    : Math.max(1, item.quantity - 1),
+              }
+            : item
+        )
+        .filter((item) => item.quantity > 0)
     );
   };
 

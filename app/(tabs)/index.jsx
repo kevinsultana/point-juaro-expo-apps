@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -9,7 +9,8 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
-  Platform,
+  Dimensions,
+  FlatList,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -25,11 +26,13 @@ import {
   query,
   where,
   orderBy,
-  limit,
 } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useRouter } from "expo-router";
-import { StatusBar } from "expo-status-bar";
+
+const { width: screenWidth } = Dimensions.get("window");
+const CARD_WIDTH = screenWidth * 0.85;
+const CARD_MARGIN = screenWidth - CARD_WIDTH * 2;
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("Home");
@@ -41,6 +44,7 @@ export default function Home() {
   const [errorMsg, setErrorMsg] = useState("");
 
   const router = useRouter();
+  const flatListRef = useRef(null);
 
   const activeMembership = memberships[activeIndex] ?? null;
 
@@ -119,21 +123,25 @@ export default function Home() {
     };
   }, [user?.uid]);
 
+  const onScroll = (event) => {
+    const index = Math.round(event.nativeEvent.contentOffset.x / CARD_WIDTH);
+    setActiveIndex(index);
+  };
+
   const storeName = activeMembership?.merchantName ?? "—";
   const points = activeMembership?.points ?? 0;
   const stamps = activeMembership?.stamps ?? 0;
   const qrValue = `${user?.uid ?? ""}`;
-  const userName = userData?.name ?? "";
+  const userName = userData?.name ?? user?.email ?? "";
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#0b1222" }}>
       <View style={s.screen}>
         {/* Header */}
         <View style={s.header}>
           <View style={s.brandWrap}>
             <Image source={require("../../assets/logo.png")} />
           </View>
-
           <View style={s.headerActions}>
             <Pressable style={s.iconBtn}>
               <Ionicons
@@ -185,22 +193,13 @@ export default function Home() {
         </View>
 
         {loading ? (
-          <View
-            style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-          >
+          <View style={s.centerContent}>
             <ActivityIndicator color="#fff" />
-            <Text style={{ color: "#94a3b8", marginTop: 8 }}>Memuat data…</Text>
+            <Text style={s.loadingText}>Memuat data…</Text>
           </View>
         ) : memberships.length === 0 ? (
-          <View
-            style={{
-              flex: 1,
-              alignItems: "center",
-              justifyContent: "center",
-              padding: 24,
-            }}
-          >
-            <Text style={{ color: "white", fontSize: 16, textAlign: "center" }}>
+          <View style={s.centerContent}>
+            <Text style={s.emptyMembershipText}>
               Kamu belum punya membership. Scan QR toko untuk bergabung.
             </Text>
           </View>
@@ -209,59 +208,66 @@ export default function Home() {
             contentContainerStyle={{ paddingBottom: 28 }}
             showsVerticalScrollIndicator={false}
           >
-            {/* Loyalty Card */}
-            <LinearGradient
-              colors={["#22c55e", "#0ea5e9"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={s.card}
-            >
-              <View style={s.cardHeader}>
-                <Text style={s.cardStore}>{storeName}</Text>
-                <Text style={s.cardBadge}>
-                  {activeMembership?.promotionType === "stamp"
-                    ? "Stamps"
-                    : "Points"}
-                </Text>
-              </View>
+            <FlatList
+              ref={flatListRef}
+              horizontal
+              data={memberships}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <LinearGradient
+                  colors={["#22c55e", "#0ea5e9"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[s.card, { width: CARD_WIDTH }]}
+                >
+                  <View style={s.cardHeader}>
+                    <Text style={s.cardStore}>{item.merchantName}</Text>
+                    <Text style={s.cardBadge}>
+                      {item.promotionType === "stamp" ? "Stamps" : "Points"}
+                    </Text>
+                  </View>
+                  <View style={s.cardMiddle}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.pointValue}>
+                        {item.promotionType === "stamp"
+                          ? item.stamps
+                          : item.points}
+                      </Text>
+                      <Text style={s.pointLabel}>
+                        {item.promotionType === "stamp" ? "Stamps" : "Poin"}
+                      </Text>
+                    </View>
+                    <View style={s.qrWrap}>
+                      <QRCode
+                        value={qrValue}
+                        size={88}
+                        backgroundColor="transparent"
+                      />
+                    </View>
+                  </View>
+                  <View style={s.cardFooter}>
+                    <View>
+                      <Text style={s.memberLabel}>Nama Member</Text>
+                      <Text style={s.memberEmail}>{userName}</Text>
+                    </View>
+                  </View>
+                </LinearGradient>
+              )}
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onScroll={onScroll}
+              snapToAlignment="end"
+              decelerationRate="normal"
+              snapToInterval={CARD_WIDTH}
+              contentContainerStyle={{
+                paddingHorizontal: CARD_MARGIN,
+              }}
+            />
 
-              <View style={s.cardMiddle}>
-                <View style={{ flex: 1 }}>
-                  <Text style={s.pointValue}>
-                    {activeMembership?.promotionType === "stamp"
-                      ? `${stamps}`
-                      : `${points}`}
-                  </Text>
-                  <Text style={s.pointLabel}>
-                    {activeMembership?.promotionType === "stamp"
-                      ? "Stamps"
-                      : "Poin"}
-                  </Text>
-                </View>
-
-                <View style={s.qrWrap}>
-                  <QRCode
-                    value={qrValue}
-                    size={88}
-                    backgroundColor="transparent"
-                  />
-                </View>
-              </View>
-
-              <View style={s.cardFooter}>
-                <View>
-                  <Text style={s.memberLabel}>Nama Member</Text>
-                  <Text style={s.memberEmail}>{userName}</Text>
-                </View>
-              </View>
-            </LinearGradient>
-
-            {/* Dots: jumlah = memberships.length */}
             <View style={s.dots}>
-              {memberships.map((m, i) => (
-                <Pressable
-                  key={m.id}
-                  onPress={() => setActiveIndex(i)}
+              {memberships.map((_, i) => (
+                <View
+                  key={i}
                   style={[s.dot, i === activeIndex && s.dotActive]}
                 />
               ))}
@@ -270,12 +276,7 @@ export default function Home() {
             <Text style={s.sectionTitle}>Riwayat Transaksi di {storeName}</Text>
 
             {visibleTransactions.length === 0 ? (
-              <View
-                style={[
-                  s.txCard,
-                  { alignItems: "center", justifyContent: "center" },
-                ]}
-              >
+              <View style={[s.txCard, s.centerContent]}>
                 <Text style={{ color: "#94a3b8" }}>Belum ada transaksi.</Text>
               </View>
             ) : (
@@ -289,28 +290,20 @@ export default function Home() {
                     </Text>
                     <Text style={s.txAmount}>{formatIDR(t.amount ?? 0)}</Text>
                   </View>
-                  {t.points && (
-                    <Text style={s.txPoint}>
-                      {(t.points ?? 0) >= 0
-                        ? `+${t.points ?? 0}`
-                        : `${t.points ?? 0}`}{" "}
-                      Poin
-                    </Text>
-                  )}
-                  {t.stamps && (
-                    <Text style={s.txPoint}>
-                      {(t.stamps ?? 0) >= 0
-                        ? `+${t.stamps ?? 0}`
-                        : `${t.stamps ?? 0}`}{" "}
-                      Poin
-                    </Text>
-                  )}
+                  <Text style={s.txPoint}>
+                    {t.pointsAwarded >= 0
+                      ? `+${t.pointsAwarded}`
+                      : t.pointsAwarded}{" "}
+                    Poin
+                  </Text>
                 </View>
               ))
             )}
 
             {!!errorMsg && (
-              <Text style={{ color: "#fca5a5", marginTop: 8 }}>
+              <Text
+                style={{ color: "#fca5a5", marginTop: 8, textAlign: "center" }}
+              >
                 Error: {errorMsg}
               </Text>
             )}
@@ -328,6 +321,21 @@ const s = StyleSheet.create({
     paddingHorizontal: 12,
     paddingTop: 10,
   },
+  centerContent: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+  },
+  loadingText: {
+    color: "#94a3b8",
+    marginTop: 8,
+  },
+  emptyMembershipText: {
+    color: "white",
+    fontSize: 16,
+    textAlign: "center",
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -335,13 +343,6 @@ const s = StyleSheet.create({
     marginBottom: 14,
   },
   brandWrap: { flexDirection: "row", alignItems: "center" },
-  brandLogo: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    backgroundColor: "#2563eb",
-  },
-  brandText: { color: "white", fontSize: 18, fontWeight: "800" },
   headerActions: { flexDirection: "row", gap: 10 },
   iconBtn: {
     backgroundColor: "white",
@@ -372,17 +373,19 @@ const s = StyleSheet.create({
   card: {
     borderRadius: 18,
     padding: 16,
-    minHeight: 170,
+    height: 200, // Fixed height for consistency
+    justifyContent: "space-between",
     shadowColor: "#000",
     shadowOpacity: 0.3,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
+    marginHorizontal: 16,
   },
   cardHeader: { flexDirection: "row", justifyContent: "space-between" },
   cardStore: { color: "white", fontSize: 20, fontWeight: "800" },
   cardBadge: { color: "white", opacity: 0.9, fontWeight: "700" },
-  cardMiddle: { flexDirection: "row", alignItems: "center", marginTop: 12 },
+  cardMiddle: { flexDirection: "row", alignItems: "center" },
   pointValue: {
     color: "white",
     fontSize: 40,
@@ -390,19 +393,27 @@ const s = StyleSheet.create({
     lineHeight: 44,
   },
   pointLabel: { color: "white", opacity: 0.9, marginTop: -4 },
-  qrWrap: { backgroundColor: "white", padding: 8, borderRadius: 10 },
-  cardFooter: { marginTop: 18 },
+  qrWrap: {
+    backgroundColor: "white",
+    padding: 8,
+    borderRadius: 10,
+    alignSelf: "center",
+  },
+  cardFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+  },
   memberLabel: { color: "white", opacity: 0.8, marginBottom: 2 },
   memberEmail: { color: "white", fontWeight: "700" },
   dots: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: 6,
-    marginTop: 10,
-    marginBottom: 8,
+    gap: 8,
+    marginVertical: 16,
   },
-  dot: { width: 12, height: 12, borderRadius: 4, backgroundColor: "#334155" },
-  dotActive: { backgroundColor: "#94a3b8" },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "#334155" },
+  dotActive: { backgroundColor: "#94a3b8", width: 16 },
   sectionTitle: {
     color: "white",
     fontSize: 20,
