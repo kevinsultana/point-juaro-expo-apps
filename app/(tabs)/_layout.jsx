@@ -16,9 +16,9 @@ export default function TabsLayout() {
     );
   }
 
-  if (!user || !userData) {
-    return <Redirect href="/(auth)/sign-in" />;
-  }
+  // if (!user || !userData) {
+  //   return <Redirect href="/(auth)/sign-in" />;
+  // }
   return (
     <Tabs
       screenOptions={{

@@ -22,16 +22,21 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.kevinsultana.pointjuaroapps"
+      "package": "com.kevinsultana.pointjuaroapps",
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
+      "router": {
+        "origin": "expo"
+      },
       "eas": {
-        "projectId": "2bac112e-b791-4d3d-8b59-4b64798f198e"
+        "projectId": "006e9757-a56d-4b60-8b54-afa6deede436"
       }
     },
+    "owner": "kevinsultana",
     "plugins": [
       "expo-router"
     ]
