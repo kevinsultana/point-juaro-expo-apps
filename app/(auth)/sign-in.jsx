@@ -6,6 +6,10 @@ import {
   Pressable,
   StyleSheet,
   Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from "react-native";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../lib/firebase";
@@ -26,47 +30,95 @@ export default function SignIn() {
   };
 
   return (
-    <View style={s.container}>
-      <Text style={s.title}>Masuk</Text>
-      <TextInput
-        placeholder="Email"
-        autoCapitalize="none"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-        style={s.input}
-      />
-      <TextInput
-        placeholder="Password"
-        secureTextEntry
-        value={pass}
-        onChangeText={setPass}
-        style={s.input}
-      />
-      <Pressable style={s.btn} onPress={onSubmit}>
-        <Text style={s.btnText}>Masuk</Text>
-      </Pressable>
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: "#0b1222" }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={s.container}>
+          <Image source={require("../../assets/logo.png")} style={s.logo} />
+          <Text style={s.title}>Masuk</Text>
+          <Text style={s.subtitle}>
+            Masuk untuk melanjutkan ke akun PointJuaro Anda.
+          </Text>
+          <TextInput
+            placeholder="Email"
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+            style={s.input}
+            placeholderTextColor="#94a3b8"
+          />
+          <TextInput
+            placeholder="Password"
+            secureTextEntry
+            value={pass}
+            onChangeText={setPass}
+            style={s.input}
+            placeholderTextColor="#94a3b8"
+          />
+          <Pressable style={s.btn} onPress={onSubmit}>
+            <Text style={s.btnText}>Masuk</Text>
+          </Pressable>
 
-      <View style={{ height: 8 }} />
-      <Link href="/(auth)/sign-up">Belum punya akun? Daftar</Link>
-    </View>
+          <View style={{ height: 8 }} />
+          <Link href="/(auth)/sign-up" style={s.link}>
+            Belum punya akun? <Text style={s.linkText}>Daftar</Text>
+          </Link>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, padding: 16, justifyContent: "center", gap: 12 },
+  container: {
+    padding: 24,
+    backgroundColor: "#0b1222",
+  },
+  logo: {
+    alignSelf: "center",
+    marginBottom: 24,
+  },
   title: {
-    fontSize: 24,
-    fontWeight: "700",
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "white",
     marginBottom: 8,
     textAlign: "center",
   },
-  input: { borderWidth: 1, borderColor: "#ddd", borderRadius: 12, padding: 12 },
+  subtitle: {
+    color: "#94a3b8",
+    textAlign: "center",
+    marginBottom: 32,
+  },
+  input: {
+    backgroundColor: "#1e293b",
+    color: "white",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
   btn: {
-    backgroundColor: "black",
-    padding: 14,
+    backgroundColor: "#2563eb",
+    padding: 16,
     borderRadius: 12,
     alignItems: "center",
   },
-  btnText: { color: "white", fontWeight: "700" },
+  btnText: { color: "white", fontWeight: "bold", fontSize: 16 },
+  link: {
+    color: "#94a3b8",
+    textAlign: "center",
+    marginTop: 16,
+  },
+  linkText: {
+    color: "#2563eb",
+    fontWeight: "bold",
+  },
 });

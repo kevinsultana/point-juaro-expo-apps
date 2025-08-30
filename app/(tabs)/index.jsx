@@ -7,7 +7,6 @@ import {
   ScrollView,
   SafeAreaView,
   Image,
-  TouchableOpacity,
   ActivityIndicator,
   Dimensions,
   FlatList,
@@ -287,10 +286,7 @@ export default function Home() {
                     <Text style={s.txAmount}>{formatIDR(t.amount ?? 0)}</Text>
                   </View>
                   <Text style={s.txPoint}>
-                    {t.pointsAwarded >= 0
-                      ? `+${t.pointsAwarded}`
-                      : t.pointsAwarded}{" "}
-                    Poin
+                    {t.pointsAwarded >= 0 ? `+1` : t.pointsAwarded} Poin
                   </Text>
                 </View>
               ))

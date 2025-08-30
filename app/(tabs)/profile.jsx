@@ -15,7 +15,6 @@ import { doc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../../lib/firebase";
 import { useAuth } from "../../contexts/auth-contexts";
 import QRCode from "react-native-qrcode-svg";
-import { Ionicons } from "@expo/vector-icons";
 
 export default function Profile() {
   const router = useRouter();
@@ -31,13 +30,13 @@ export default function Profile() {
     }
   }, [userProfile]);
 
-  const handleLogout = () => {
-    signOut(auth).then(() => {
-      // Menggunakan dismissAll untuk membersihkan stack navigasi
-      // dan memastikan pengguna kembali ke halaman login.
-      router.dismissAll();
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
       router.replace("/(auth)/sign-in");
-    });
+    } catch (e) {
+      Alert.alert("Error", "Gagal logout. Coba lagi.");
+    }
   };
 
   const handleSaveName = async () => {
@@ -76,11 +75,6 @@ export default function Profile() {
           headerStyle: { backgroundColor: "#0b1222" },
           headerTintColor: "white",
           headerTitleAlign: "center",
-          headerLeft: () => (
-            <Pressable onPress={() => router.back()} style={{ marginLeft: 10 }}>
-              <Ionicons name="arrow-back" size={24} color="white" />
-            </Pressable>
-          ),
         }}
       />
       <View style={styles.container}>
