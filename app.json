@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "point-juaro-apps",
+    "name": "Point Juaro",
     "slug": "point-juaro-apps",
-    "scheme": "point-juaro-apps",
+    "scheme": "pointjuaro",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

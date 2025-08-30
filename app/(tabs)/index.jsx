@@ -24,10 +24,8 @@ import {
   onSnapshot,
   query,
   where,
-  orderBy,
 } from "firebase/firestore";
 import { db } from "../../lib/firebase";
-import { useRouter } from "expo-router";
 
 const { width: screenWidth } = Dimensions.get("window");
 const CARD_WIDTH = screenWidth * 0.85;
@@ -42,7 +40,6 @@ export default function Home() {
   const [transactions, setTransactions] = useState([]);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const router = useRouter();
   const flatListRef = useRef(null);
 
   const activeMembership = memberships[activeIndex] ?? null;
@@ -54,7 +51,7 @@ export default function Home() {
       .sort((a, b) => {
         const ta = a.createdAt?.toMillis?.() ?? 0;
         const tb = b.createdAt?.toMillis?.() ?? 0;
-        return tb - ta; // terbaru di atas
+        return tb - ta;
       });
   }, [transactions, activeMembership]);
 
@@ -128,8 +125,6 @@ export default function Home() {
   };
 
   const storeName = activeMembership?.merchantName ?? "—";
-  const points = activeMembership?.points ?? 0;
-  const stamps = activeMembership?.stamps ?? 0;
   const qrValue = `${user?.uid ?? ""}`;
   const userName = userData?.name ?? user?.email ?? "";
 

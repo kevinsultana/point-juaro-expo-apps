@@ -3,7 +3,6 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
 import { auth, db } from "../lib/firebase";
 import { Alert } from "react-native";
-import { useRouter, useNavigation } from "expo-router";
 
 const AuthContext = createContext(null);
 
@@ -11,8 +10,6 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
   const [initializing, setInitializing] = useState(true);
-  const navigate = useNavigation();
-  const router = useRouter();
 
   useEffect(() => {
     let unsubUserDoc = null;
@@ -22,7 +19,6 @@ export function AuthProvider({ children }) {
 
       if (unsubUserDoc) {
         unsubUserDoc();
-        unsubUserDoc = null;
       }
 
       if (!u) {
@@ -41,21 +37,16 @@ export function AuthProvider({ children }) {
               Alert.alert(
                 "Akses Ditolak",
                 "Aplikasi ini hanya untuk pelanggan. Silakan gunakan situs web untuk Login.",
-                [
-                  {
-                    text: "OK",
-                    onPress: () => {
-                      signOut(auth), router.replace("/(auth)/sign-in");
-                    },
-                  },
-                ]
+                [{ text: "OK", onPress: () => signOut(auth) }],
+                { cancelable: false }
               );
+              // Dengan mengatur userData menjadi null, index.js akan mengarahkan ke login
               setUserData(null);
             } else {
               setUserData(data);
             }
           } else {
-            // Jika dokumen pengguna tidak ada, keluar
+            // Pengguna ada di Auth tapi tidak di Firestore, anggap tidak valid
             signOut(auth);
             setUserData(null);
           }
