@@ -15,13 +15,19 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../../lib/firebase";
 import { useRouter, Link } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function SignUp() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const onSubmit = async () => {
+    if (!email || !pass) {
+      Alert.alert("Error", "Email dan password harus diisi.");
+      return;
+    }
     try {
       const cred = await createUserWithEmailAndPassword(
         auth,
@@ -61,14 +67,26 @@ export default function SignUp() {
             style={s.input}
             placeholderTextColor="#94a3b8"
           />
-          <TextInput
-            placeholder="Password (min 6 karakter)"
-            secureTextEntry
-            value={pass}
-            onChangeText={setPass}
-            style={s.input}
-            placeholderTextColor="#94a3b8"
-          />
+          <View style={s.passwordContainer}>
+            <TextInput
+              placeholder="Password (min 6 karakter)"
+              secureTextEntry={!isPasswordVisible}
+              value={pass}
+              onChangeText={setPass}
+              style={s.inputPassword}
+              placeholderTextColor="#94a3b8"
+            />
+            <Pressable
+              onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+              style={s.eyeIcon}
+            >
+              <Ionicons
+                name={isPasswordVisible ? "eye-off-outline" : "eye-outline"}
+                size={24}
+                color="#94a3b8"
+              />
+            </Pressable>
+          </View>
           <Pressable style={s.btn} onPress={onSubmit}>
             <Text style={s.btnText}>Buat Akun</Text>
           </Pressable>
@@ -112,6 +130,25 @@ const s = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: "#334155",
+    fontSize: 16,
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1e293b",
+    borderRadius: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  inputPassword: {
+    flex: 1,
+    color: "white",
+    padding: 16,
+    fontSize: 16,
+  },
+  eyeIcon: {
+    paddingRight: 16,
   },
   btn: {
     backgroundColor: "#2563eb",

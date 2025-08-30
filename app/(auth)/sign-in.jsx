@@ -14,13 +14,19 @@ import {
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../lib/firebase";
 import { Link, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function SignIn() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const onSubmit = async () => {
+    if (!email || !pass) {
+      Alert.alert("Error", "Email dan password harus diisi.");
+      return;
+    }
     try {
       await signInWithEmailAndPassword(auth, email.trim(), pass);
       router.replace("/(tabs)");
@@ -40,7 +46,7 @@ export default function SignIn() {
       >
         <View style={s.container}>
           <Image source={require("../../assets/logo.png")} style={s.logo} />
-          <Text style={s.title}>Masuk</Text>
+          <Text style={s.title}>Login</Text>
           <Text style={s.subtitle}>
             Masuk untuk melanjutkan ke akun PointJuaro Anda.
           </Text>
@@ -53,14 +59,26 @@ export default function SignIn() {
             style={s.input}
             placeholderTextColor="#94a3b8"
           />
-          <TextInput
-            placeholder="Password"
-            secureTextEntry
-            value={pass}
-            onChangeText={setPass}
-            style={s.input}
-            placeholderTextColor="#94a3b8"
-          />
+          <View style={s.passwordContainer}>
+            <TextInput
+              placeholder="Password"
+              secureTextEntry={!isPasswordVisible}
+              value={pass}
+              onChangeText={setPass}
+              style={s.inputPassword}
+              placeholderTextColor="#94a3b8"
+            />
+            <Pressable
+              onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+              style={s.eyeIcon}
+            >
+              <Ionicons
+                name={isPasswordVisible ? "eye-off-outline" : "eye-outline"}
+                size={24}
+                color="#94a3b8"
+              />
+            </Pressable>
+          </View>
           <Pressable style={s.btn} onPress={onSubmit}>
             <Text style={s.btnText}>Masuk</Text>
           </Pressable>
@@ -104,6 +122,25 @@ const s = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: "#334155",
+    fontSize: 16,
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1e293b",
+    borderRadius: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  inputPassword: {
+    flex: 1,
+    color: "white",
+    padding: 16,
+    fontSize: 16,
+  },
+  eyeIcon: {
+    paddingRight: 16,
   },
   btn: {
     backgroundColor: "#2563eb",
