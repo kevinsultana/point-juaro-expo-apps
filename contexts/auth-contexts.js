@@ -19,6 +19,7 @@ export function AuthProvider({ children }) {
 
       if (unsubUserDoc) {
         unsubUserDoc();
+        unsubUserDoc = null;
       }
 
       if (!u) {
@@ -33,20 +34,26 @@ export function AuthProvider({ children }) {
         (snap) => {
           if (snap.exists()) {
             const data = { id: snap.id, ...snap.data() };
+            // Cek peran pengguna
             if (data.role !== "customer") {
               Alert.alert(
                 "Akses Ditolak",
                 "Aplikasi ini hanya untuk pelanggan. Silakan gunakan situs web untuk Login.",
-                [{ text: "OK", onPress: () => signOut(auth) }],
+                [
+                  {
+                    text: "OK",
+                    // Cukup panggil signOut. Navigasi akan ditangani secara otomatis.
+                    onPress: () => signOut(auth),
+                  },
+                ],
                 { cancelable: false }
               );
-              // Dengan mengatur userData menjadi null, index.js akan mengarahkan ke login
               setUserData(null);
             } else {
               setUserData(data);
             }
           } else {
-            // Pengguna ada di Auth tapi tidak di Firestore, anggap tidak valid
+            // Jika dokumen pengguna tidak ada di Firestore, logout
             signOut(auth);
             setUserData(null);
           }

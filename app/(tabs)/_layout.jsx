@@ -1,9 +1,24 @@
-import { Tabs } from "expo-router";
+import { Redirect, Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useCart } from "../../contexts/CartContext";
+import { useAuth } from "../../contexts/auth-contexts";
+import { ActivityIndicator } from "react-native";
 
 export default function TabsLayout() {
   const { cartCount } = useCart();
+  const { user, userData, initializing } = useAuth();
+
+  if (initializing) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator color="#fff" />
+      </View>
+    );
+  }
+
+  if (!user || !userData) {
+    return <Redirect href="/(auth)/sign-in" />;
+  }
   return (
     <Tabs
       screenOptions={{
