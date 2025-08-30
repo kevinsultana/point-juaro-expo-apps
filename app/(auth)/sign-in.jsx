@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../lib/firebase";
@@ -21,16 +22,21 @@ export default function SignIn() {
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const onSubmit = async () => {
+    setLoading(true);
     if (!email || !pass) {
       Alert.alert("Error", "Email dan password harus diisi.");
+      setLoading(false);
       return;
     }
     try {
       await signInWithEmailAndPassword(auth, email.trim(), pass);
+      setLoading(false);
       router.replace("/(tabs)");
     } catch (e) {
+      setLoading(false);
       Alert.alert("Login gagal", e.message);
     }
   };
@@ -80,7 +86,13 @@ export default function SignIn() {
             </Pressable>
           </View>
           <Pressable style={s.btn} onPress={onSubmit}>
-            <Text style={s.btnText}>Masuk</Text>
+            <Text style={s.btnText}>
+              {loading ? (
+                <ActivityIndicator size={"small"} color={"#fff"} />
+              ) : (
+                "Masuk"
+              )}
+            </Text>
           </Pressable>
 
           <View style={{ height: 8 }} />
