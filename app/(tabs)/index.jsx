@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Dimensions,
   FlatList,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -26,10 +27,99 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "../../lib/firebase";
+import Animated, {
+  Layout,
+  FadeIn,
+  FadeOut,
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from "react-native-reanimated";
 
 const { width: screenWidth } = Dimensions.get("window");
 const CARD_WIDTH = screenWidth * 0.85;
 const CARD_MARGIN = screenWidth - CARD_WIDTH * 2;
+
+function TxItem({ t, isOpen, onToggle }) {
+  const progress = useSharedValue(isOpen ? 1 : 0);
+  useEffect(() => {
+    progress.value = withTiming(isOpen ? 1 : 0, { duration: 180 });
+  }, [isOpen]);
+
+  const rotateStyle = useAnimatedStyle(() => {
+    return { transform: [{ rotate: `${progress.value * 180}deg` }] };
+  });
+
+  const items = Array.isArray(t.items)
+    ? t.items
+    : Array.isArray(t.cartItems)
+    ? t.cartItems
+    : [];
+
+  return (
+    <Animated.View
+      layout={Layout.springify().stiffness(220).damping(22)}
+      style={s.txWrap}
+    >
+      <Pressable
+        onPress={onToggle}
+        style={s.txCard}
+        android_ripple={{ color: "#1f2937" }}
+      >
+        <View style={{ flex: 1 }}>
+          <Text style={s.txDate}>
+            {formatIndoDate(
+              t.createdAt?.toDate ? t.createdAt.toDate() : t.createdAt
+            )}
+          </Text>
+          <Text style={s.txAmount}>{formatIDR(t.amount ?? 0)}</Text>
+        </View>
+
+        <View style={{ alignItems: "flex-end", gap: 6 }}>
+          <Text style={s.txPoint}>
+            {t.pointsAwarded >= 0 ? `+ ${t.pointsAwarded}` : null} Poin
+          </Text>
+          <Animated.View style={rotateStyle}>
+            <Ionicons name="chevron-down" size={18} color="#94a3b8" />
+          </Animated.View>
+        </View>
+      </Pressable>
+
+      {isOpen && (
+        <Animated.View
+          entering={FadeIn.duration(160)}
+          exiting={FadeOut.duration(120)}
+          style={s.txDetail}
+        >
+          {items.length === 0 ? (
+            <Text style={s.itemEmpty}>Tidak ada detail item.</Text>
+          ) : (
+            <>
+              {items.map((it, idx) => (
+                <View key={idx} style={s.itemRow}>
+                  <Text style={s.itemName}>
+                    {it.name || it.title || "Item"}
+                  </Text>
+                  <Text style={s.itemMeta}>
+                    {it.qty ?? it.quantity ?? 1} ×{" "}
+                    {formatIDR(it.price ?? it.unitPrice ?? 0)}
+                  </Text>
+                </View>
+              ))}
+              <View style={s.itemDivider} />
+              <View style={s.itemRow}>
+                <Text style={[s.itemName, { fontWeight: "800" }]}>Total</Text>
+                <Text style={[s.itemMeta, { fontWeight: "800" }]}>
+                  {formatIDR(t.amount ?? 0)}
+                </Text>
+              </View>
+            </>
+          )}
+        </Animated.View>
+      )}
+    </Animated.View>
+  );
+}
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("Home");
@@ -39,6 +129,8 @@ export default function Home() {
   const [memberships, setMemberships] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [errorMsg, setErrorMsg] = useState("");
+
+  const [openTxIds, setOpenTxIds] = useState(new Set());
 
   const flatListRef = useRef(null);
 
@@ -146,6 +238,14 @@ export default function Home() {
   const storeName = activeMembership?.merchantName ?? "—";
   const qrValue = `${user?.uid ?? ""}`;
   const userName = userData?.name ?? user?.email ?? "";
+
+  const toggleTx = (id) => {
+    setOpenTxIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#0b1222" }}>
@@ -282,7 +382,9 @@ export default function Home() {
               ))}
             </View>
 
-            <Text style={s.sectionTitle}>Riwayat Transaksi di {storeName}</Text>
+            <Text style={s.sectionTitle}>
+              Riwayat Transaksi di {activeMembership?.merchantName ?? "—"}
+            </Text>
 
             {visibleTransactions.length === 0 ? (
               <View style={[s.txCard, s.centerContent]}>
@@ -290,19 +392,12 @@ export default function Home() {
               </View>
             ) : (
               visibleTransactions.map((t) => (
-                <View key={t.id} style={[s.txCard, { marginBottom: 10 }]}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={s.txDate}>
-                      {formatIndoDate(
-                        t.createdAt?.toDate ? t.createdAt.toDate() : t.createdAt
-                      )}
-                    </Text>
-                    <Text style={s.txAmount}>{formatIDR(t.amount ?? 0)}</Text>
-                  </View>
-                  <Text style={s.txPoint}>
-                    {t.pointsAwarded >= 0 ? `+ ${t.pointsAwarded}` : null} Poin
-                  </Text>
-                </View>
+                <TxItem
+                  key={t.id}
+                  t={t}
+                  isOpen={openTxIds.has(t.id)}
+                  onToggle={() => toggleTx(t.id)}
+                />
               ))
             )}
 
@@ -376,17 +471,23 @@ const s = StyleSheet.create({
   segmentBtnActive: { backgroundColor: "#2563eb" },
   segmentText: { color: "#94a3b8", fontWeight: "700", fontSize: 16 },
   segmentTextActive: { color: "white" },
+
   card: {
     borderRadius: 18,
     padding: 16,
-    height: 200, // Fixed height for consistency
+    height: 200,
     justifyContent: "space-between",
-    shadowColor: "#000",
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
     marginHorizontal: 16,
+    ...(Platform.OS === "ios"
+      ? {
+          shadowColor: "#000",
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 4 },
+        }
+      : {
+          elevation: 4,
+        }),
   },
   cardHeader: { flexDirection: "row", justifyContent: "space-between" },
   cardStore: { color: "white", fontSize: 20, fontWeight: "800" },
@@ -412,6 +513,7 @@ const s = StyleSheet.create({
   },
   memberLabel: { color: "white", opacity: 0.8, marginBottom: 2 },
   memberEmail: { color: "white", fontWeight: "700" },
+
   dots: {
     flexDirection: "row",
     justifyContent: "center",
@@ -420,6 +522,7 @@ const s = StyleSheet.create({
   },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "#334155" },
   dotActive: { backgroundColor: "#94a3b8", width: 16 },
+
   sectionTitle: {
     color: "white",
     fontSize: 20,
@@ -427,6 +530,8 @@ const s = StyleSheet.create({
     marginTop: 12,
     marginBottom: 10,
   },
+
+  // Kartu transaksi (header)
   txCard: {
     backgroundColor: "#121a2d",
     borderRadius: 14,
@@ -434,7 +539,38 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
+
+  // Container tiap transaksi (untuk animasi layout dan border)
+  txWrap: {
+    backgroundColor: "#121a2d",
+    borderRadius: 14,
+    marginBottom: 10,
+    overflow: "hidden",
+  },
+
+  // Konten detail accordion
+  txDetail: {
+    paddingHorizontal: 14,
+    paddingBottom: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#1f2937",
+    gap: 8,
+  },
+
+  // Teks transaksi
   txDate: { color: "white", fontWeight: "700", marginBottom: 4 },
   txAmount: { color: "#94a3b8" },
   txPoint: { color: "#22c55e", fontWeight: "800" },
+
+  // Item detail rows
+  itemRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: 8,
+  },
+  itemName: { color: "#e2e8f0" },
+  itemMeta: { color: "#94a3b8" },
+  itemDivider: { height: 1, backgroundColor: "#1f2937", marginTop: 8 },
+  itemEmpty: { color: "#94a3b8", paddingTop: 8 },
 });

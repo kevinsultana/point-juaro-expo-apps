@@ -16,6 +16,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../lib/firebase";
 import { Link, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import Toast from "react-native-toast-message";
 
 export default function SignIn() {
   const router = useRouter();
@@ -27,17 +28,28 @@ export default function SignIn() {
   const onSubmit = async () => {
     setLoading(true);
     if (!email || !pass) {
-      Alert.alert("Error", "Email dan password harus diisi.");
+      Toast.show({
+        type: "error",
+        text1: "Email dan password harus diisi.",
+      });
       setLoading(false);
       return;
     }
     try {
       await signInWithEmailAndPassword(auth, email.trim(), pass);
       setLoading(false);
+      Toast.show({
+        type: "success",
+        text1: "Login berhasil.",
+      });
       router.replace("/(tabs)");
     } catch (e) {
       setLoading(false);
-      Alert.alert("Login gagal", e.message);
+      Toast.show({
+        type: "error",
+        text1: "Login gagal.",
+        text2: e.message,
+      });
     }
   };
 

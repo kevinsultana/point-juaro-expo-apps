@@ -17,6 +17,7 @@ import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../../lib/firebase";
 import { useRouter, Link } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import Toast from "react-native-toast-message";
 
 export default function SignUp() {
   const router = useRouter();
@@ -28,7 +29,10 @@ export default function SignUp() {
   const onSubmit = async () => {
     setLoading(true);
     if (!email || !pass) {
-      Alert.alert("Error", "Email dan password harus diisi.");
+      Toast.show({
+        type: "error",
+        text1: "Email dan password harus diisi.",
+      });
       setLoading(false);
       return;
     }
@@ -43,10 +47,18 @@ export default function SignUp() {
         createdAt: serverTimestamp(),
         role: "customer",
       });
+      Toast.show({
+        type: "success",
+        text1: "Daftar berhasil.",
+      });
       router.replace("/(tabs)");
       setLoading(false);
     } catch (e) {
-      Alert.alert("Daftar gagal", e.message);
+      Toast.show({
+        type: "error",
+        text1: "Daftar gagal.",
+        text2: e.message,
+      });
       setLoading(false);
     }
   };

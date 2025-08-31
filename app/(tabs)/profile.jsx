@@ -15,6 +15,7 @@ import { doc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../../lib/firebase";
 import { useAuth } from "../../contexts/auth-contexts";
 import QRCode from "react-native-qrcode-svg";
+import Toast from "react-native-toast-message";
 
 export default function Profile() {
   const router = useRouter();
@@ -33,9 +34,16 @@ export default function Profile() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
+      Toast.show({
+        type: "success",
+        text1: "Logout berhasil.",
+      });
       router.replace("/(auth)/sign-in");
     } catch (e) {
-      Alert.alert("Error", "Gagal logout. Coba lagi.");
+      Toast.show({
+        type: "error",
+        text1: "Logout gagal.",
+      });
     }
   };
 
@@ -49,10 +57,16 @@ export default function Profile() {
         name: displayName.trim(),
       });
       setIsEditing(false);
-      Alert.alert("Sukses", "Nama berhasil diperbarui.");
+      Toast.show({
+        type: "success",
+        text1: "Nama berhasil diperbarui.",
+      });
     } catch (error) {
       console.error("Gagal memperbarui nama:", error);
-      Alert.alert("Error", "Gagal menyimpan perubahan.");
+      Toast.show({
+        type: "error",
+        text1: "Gagal memperbarui nama.",
+      });
     } finally {
       setSaving(false);
     }

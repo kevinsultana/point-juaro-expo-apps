@@ -1,3 +1,4 @@
+import "react-native-reanimated";
 import { Stack } from "expo-router";
 import { AuthProvider } from "../contexts/auth-contexts";
 import { CartProvider } from "../contexts/CartContext";
