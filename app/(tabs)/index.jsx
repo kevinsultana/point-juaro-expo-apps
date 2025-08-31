@@ -37,8 +37,10 @@ import Animated, {
 } from "react-native-reanimated";
 
 const { width: screenWidth } = Dimensions.get("window");
-const CARD_WIDTH = screenWidth * 0.85;
-const CARD_MARGIN = screenWidth - CARD_WIDTH * 2;
+const CARD_WIDTH = Math.round(screenWidth * 0.85);
+const CARD_SPACING = 16;
+const SIDE_PADDING = (screenWidth - CARD_WIDTH) / 2;
+const CARD_TOTAL = CARD_WIDTH + CARD_SPACING;
 
 function TxItem({ t, isOpen, onToggle }) {
   const progress = useSharedValue(isOpen ? 1 : 0);
@@ -230,12 +232,6 @@ export default function Home() {
     };
   }, [user?.uid]);
 
-  const onScroll = (event) => {
-    const index = Math.round(event.nativeEvent.contentOffset.x / CARD_WIDTH);
-    setActiveIndex(index);
-  };
-
-  const storeName = activeMembership?.merchantName ?? "—";
   const qrValue = `${user?.uid ?? ""}`;
   const userName = userData?.name ?? user?.email ?? "";
 
@@ -362,15 +358,25 @@ export default function Home() {
                   </View>
                 </LinearGradient>
               )}
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              onScroll={onScroll}
-              snapToAlignment="end"
-              decelerationRate="normal"
-              snapToInterval={CARD_WIDTH}
-              contentContainerStyle={{
-                paddingHorizontal: CARD_MARGIN,
+              pagingEnabled={false}
+              snapToAlignment="start"
+              snapToInterval={CARD_TOTAL}
+              decelerationRate="fast"
+              ItemSeparatorComponent={() => (
+                <View style={{ width: CARD_SPACING }} />
+              )}
+              contentContainerStyle={{ paddingRight: SIDE_PADDING }}
+              onMomentumScrollEnd={({ nativeEvent }) => {
+                const offsetX = nativeEvent.contentOffset.x;
+                const index = Math.round(offsetX / CARD_TOTAL);
+                setActiveIndex(index);
               }}
+              getItemLayout={(_, index) => ({
+                length: CARD_TOTAL,
+                offset: CARD_TOTAL * index,
+                index,
+              })}
+              showsHorizontalScrollIndicator={false}
             />
 
             <View style={s.dots}>
@@ -477,7 +483,6 @@ const s = StyleSheet.create({
     padding: 16,
     height: 200,
     justifyContent: "space-between",
-    marginHorizontal: 16,
     ...(Platform.OS === "ios"
       ? {
           shadowColor: "#000",
@@ -485,9 +490,7 @@ const s = StyleSheet.create({
           shadowRadius: 8,
           shadowOffset: { width: 0, height: 4 },
         }
-      : {
-          elevation: 4,
-        }),
+      : { elevation: 4 }),
   },
   cardHeader: { flexDirection: "row", justifyContent: "space-between" },
   cardStore: { color: "white", fontSize: 20, fontWeight: "800" },

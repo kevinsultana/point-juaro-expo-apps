@@ -35,7 +35,6 @@ export function AuthProvider({ children }) {
         (snap) => {
           if (snap.exists()) {
             const data = { id: snap.id, ...snap.data() };
-            // Cek peran pengguna
             if (data.role !== "customer") {
               Alert.alert(
                 "Akses Ditolak",
@@ -43,7 +42,6 @@ export function AuthProvider({ children }) {
                 [
                   {
                     text: "OK",
-                    // Cukup panggil signOut. Navigasi akan ditangani secara otomatis.
                     onPress: () => signOut(auth),
                   },
                 ],
@@ -54,7 +52,6 @@ export function AuthProvider({ children }) {
               setUserData(data);
             }
           } else {
-            // Jika dokumen pengguna tidak ada di Firestore, logout
             signOut(auth);
             setUserData(null);
           }

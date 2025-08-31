@@ -6,7 +6,6 @@ import {
   Pressable,
   TextInput,
   ActivityIndicator,
-  Alert,
   SafeAreaView,
 } from "react-native";
 import { useRouter, Stack } from "expo-router";

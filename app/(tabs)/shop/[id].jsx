@@ -34,7 +34,6 @@ const ProductItem = ({ item, onAddToCart }) => (
   </TouchableOpacity>
 );
 
-// --- MerchantDetail Component ---
 export default function MerchantDetail() {
   const { id } = useLocalSearchParams();
   const [merchant, setMerchant] = useState(null);
@@ -56,25 +55,34 @@ export default function MerchantDetail() {
     setLoading(true);
     setError(null);
     try {
-      const merchantRef = doc(db, "merchants", id);
-      const docSnap = await getDoc(merchantRef);
+      const merchantId = Array.isArray(id) ? id[0] : id;
 
-      if (docSnap.exists()) {
-        setMerchant({ id: docSnap.id, ...docSnap.data() });
-      } else {
+      const merchantRef = doc(db, "merchants", merchantId);
+      const snap = await getDoc(merchantRef);
+      if (!snap.exists()) {
         setError("Toko tidak ditemukan.");
         setLoading(false);
         return;
       }
+      const merchantData = { id: snap.id, ...snap.data() };
+      setMerchant(merchantData);
 
-      const productsQuery = await getDocs(
-        collection(db, "merchants", id, "products")
+      const productsSnap = await getDocs(
+        collection(db, "merchants", merchantId, "products")
       );
-      const productsData = productsQuery.docs.map((doc) => ({
-        id: doc.id,
-        merchantName: merchant.name,
-        ...doc.data(),
-      }));
+
+      const productsData = productsSnap.docs.map((d) => {
+        const data = d.data() || {};
+        return {
+          id: d.id,
+          merchantName: merchantData.name ?? "",
+          name: data.name ?? "Produk",
+          price: Number(data.price ?? 0),
+          imgUrl: data.imgUrl || "",
+          ...data,
+        };
+      });
+
       setProducts(productsData);
     } catch (err) {
       console.error("Gagal mengambil data:", err);

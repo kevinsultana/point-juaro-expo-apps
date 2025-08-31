@@ -72,7 +72,6 @@ export default function Shop() {
           </View>
         </View>
 
-        {/* Konten Conditional */}
         {loading ? (
           <ActivityIndicator
             size="large"

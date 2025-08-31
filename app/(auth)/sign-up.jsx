@@ -5,7 +5,6 @@ import {
   TextInput,
   Pressable,
   StyleSheet,
-  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,

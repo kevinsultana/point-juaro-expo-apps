@@ -6,7 +6,6 @@ import {
   Pressable,
   Image,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import { useCart } from "../../contexts/CartContext";
 import { formatIDR } from "../../utils/formatIDR";
