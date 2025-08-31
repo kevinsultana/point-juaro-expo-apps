@@ -2,10 +2,10 @@
   "expo": {
     "name": "Point Juaro",
     "slug": "point-juaro-apps",
-    "scheme": "pointjuaro",
+    "scheme": "point-juaro-apps",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logo-point-juaro.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
     "splash": {
@@ -22,21 +22,16 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.kevinsultana.pointjuaroapps",
-      "versionCode": 1
+      "package": "com.kevinsultana.pointjuaroapps"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "router": {
-        "origin": "expo"
-      },
       "eas": {
         "projectId": "006e9757-a56d-4b60-8b54-afa6deede436"
       }
     },
-    "owner": "kevinsultana",
-    "plugins": ["expo-router"]
+    "owner": "kevinsultana"
   }
 }
