@@ -5,19 +5,22 @@
     "scheme": "point-juaro-apps",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logo-point-juaro.png",
+    "icon": "./assets/adaptive-foreground-1024.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/icon-universal-flat-1024.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "icon": "./assets/icon-ios-1024.png"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/adaptive-monochrome-1024.png",
+        "backgroundImage": "./assets/adaptive-background-gradient-1024.png",
+        "monochromeImage": "./assets/adaptive-monochrome-1024.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
