@@ -10,6 +10,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
   const [initializing, setInitializing] = useState(true);
+  const [pendingOrders, setPendingOrders] = useState([]);
 
   useEffect(() => {
     let unsubUserDoc = null;
@@ -75,7 +76,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, userData, initializing }}>
+    <AuthContext.Provider
+      value={{ user, userData, initializing, setPendingOrders, pendingOrders }}
+    >
       {children}
     </AuthContext.Provider>
   );

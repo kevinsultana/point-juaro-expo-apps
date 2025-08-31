@@ -6,7 +6,7 @@ import { ActivityIndicator } from "react-native";
 
 export default function TabsLayout() {
   const { cartCount } = useCart();
-  const { user, userData, initializing } = useAuth();
+  const { user, userData, initializing, pendingOrders } = useAuth();
 
   if (initializing) {
     return (
@@ -75,6 +75,8 @@ export default function TabsLayout() {
         name="orders"
         options={{
           title: "Orders",
+          tabBarBadge:
+            pendingOrders.length > 0 ? pendingOrders.length : undefined,
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "receipt" : "receipt-outline"}

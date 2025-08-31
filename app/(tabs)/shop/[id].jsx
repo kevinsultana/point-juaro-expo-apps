@@ -16,6 +16,7 @@ import { useCart } from "../../../contexts/CartContext";
 import { db } from "../../../lib/firebase";
 import { formatIDR } from "../../../utils/formatIDR";
 import { Ionicons } from "@expo/vector-icons";
+import Toast from "react-native-toast-message";
 
 const ProductItem = ({ item, onAddToCart }) => (
   <TouchableOpacity
@@ -40,16 +41,18 @@ export default function MerchantDetail() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { addToCart } = useCart(); // Gunakan addToCart dari context
+  const { addToCart } = useCart();
   const router = useRouter();
 
   const handleAddToCart = (product) => {
     addToCart(product, id);
-    Alert.alert("Berhasil", `${product.name} telah ditambahkan ke keranjang.`);
+    Toast.show({
+      type: "success",
+      text1: `${product.name} telah ditambahkan ke keranjang.`,
+    });
   };
 
   const getMerchantData = async () => {
-    // ... (Fungsi ini tidak berubah)
     setLoading(true);
     setError(null);
     try {
@@ -69,6 +72,7 @@ export default function MerchantDetail() {
       );
       const productsData = productsQuery.docs.map((doc) => ({
         id: doc.id,
+        merchantName: merchant.name,
         ...doc.data(),
       }));
       setProducts(productsData);
@@ -106,7 +110,7 @@ export default function MerchantDetail() {
       <Stack.Screen
         options={{
           title: merchant?.name || "Detail Toko",
-          headerShown: true, // Tampilkan header
+          headerShown: true,
           headerStyle: { backgroundColor: "#0b1222" },
           headerTintColor: "white",
           headerTitleAlign: "center",

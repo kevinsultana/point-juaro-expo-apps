@@ -15,13 +15,13 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { db } from "../../../lib/firebase";
-// Komponen terpisah untuk setiap item merchant
+
 const MerchantItem = ({ merchant }) => {
   const router = useRouter();
   return (
     <TouchableOpacity
       style={styles.merchantItem}
-      onPress={() => router.push(`/shop/${merchant.id}`)} // Arahkan ke halaman detail
+      onPress={() => router.push(`/shop/${merchant.id}`)}
     >
       <Image source={{ uri: merchant.logoUrl }} style={styles.logo} />
       <Text style={styles.merchantName}>{merchant.name}</Text>
@@ -33,7 +33,6 @@ export default function Shop() {
   const [merchants, setMerchants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const router = useRouter();
 
   const getDataMerchants = async () => {
     setLoading(true);
@@ -70,12 +69,6 @@ export default function Shop() {
                 color="#0f172a"
               />
             </Pressable>
-            <TouchableOpacity
-              onPress={() => router.push("/profile")}
-              style={styles.iconBtn}
-            >
-              <Ionicons name="person-outline" size={20} color="#0f172a" />
-            </TouchableOpacity>
           </View>
         </View>
 

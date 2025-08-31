@@ -16,6 +16,7 @@ import { useAuth } from "../../contexts/auth-contexts";
 import { db } from "../../lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { useState } from "react";
+import Toast from "react-native-toast-message";
 
 export default function Cart() {
   const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart();
@@ -30,7 +31,10 @@ export default function Cart() {
 
   const handlePreparePayment = async () => {
     if (!userProfile || cartItems.length === 0) {
-      Alert.alert("Error", "Anda harus login dan memiliki item di keranjang.");
+      Toast.show({
+        type: "error",
+        text1: "Anda harus memiliki item di keranjang.",
+      });
       return;
     }
 
@@ -42,6 +46,7 @@ export default function Cart() {
         {
           customerId: userProfile.uid,
           merchantId: cartItems[0].merchantId,
+          merchantName: cartItems[0].merchantName,
           items: cartItems,
           totalAmount: subTotal,
           createdAt: serverTimestamp(),
@@ -50,11 +55,17 @@ export default function Cart() {
       );
 
       clearCart();
-
+      Toast.show({
+        type: "success",
+        text1: "Pembayaran siap.",
+      });
       router.push(`/pending-transaction/${pendingTransactionRef.id}`);
     } catch (error) {
       console.error("Error preparing payment:", error);
-      Alert.alert("Error", "Gagal menyiapkan pembayaran, coba lagi.");
+      Toast.show({
+        type: "error",
+        text1: "Gagal menyiapkan pembayaran, coba lagi.",
+      });
     } finally {
       setLoading(false);
     }
@@ -85,7 +96,15 @@ export default function Cart() {
                 </Pressable>
               </View>
             </View>
-            <Pressable onPress={() => removeFromCart(item.id)}>
+            <Pressable
+              onPress={() => {
+                removeFromCart(item.id);
+                Toast.show({
+                  type: "success",
+                  text1: `${item.name} telah dihapus dari keranjang.`,
+                });
+              }}
+            >
               <Ionicons name="trash-outline" size={24} color="#fca5a5" />
             </Pressable>
           </View>

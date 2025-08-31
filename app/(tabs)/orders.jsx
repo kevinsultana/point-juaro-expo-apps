@@ -54,8 +54,18 @@ export default function Orders() {
               onPress={() => router.push(`/pending-transaction/${item.id}`)}
             >
               <View>
+                <Text
+                  style={{
+                    fontWeight: "bold",
+                    color: "#fff",
+                    fontSize: 16,
+                    marginBottom: 8,
+                  }}
+                >
+                  Pesanan Di {item.merchantName}
+                </Text>
                 <Text style={styles.orderId}>
-                  Pesanan #{item.id.substring(0, 6)}...
+                  Order #{item.id.substring(0, 10)}...
                 </Text>
                 <Text style={styles.orderTotal}>
                   Total: {formatIDR(item.totalAmount)}
@@ -97,6 +107,7 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
     fontSize: 16,
+    marginBottom: 4,
   },
   orderTotal: {
     color: "#94a3b8",

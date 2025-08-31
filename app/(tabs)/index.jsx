@@ -34,7 +34,7 @@ const CARD_MARGIN = screenWidth - CARD_WIDTH * 2;
 export default function Home() {
   const [activeTab, setActiveTab] = useState("Home");
   const [activeIndex, setActiveIndex] = useState(0);
-  const { user, userData } = useAuth();
+  const { user, userData, setPendingOrders } = useAuth();
   const [loading, setLoading] = useState(true);
   const [memberships, setMemberships] = useState([]);
   const [transactions, setTransactions] = useState([]);
@@ -54,6 +54,25 @@ export default function Home() {
         return tb - ta;
       });
   }, [transactions, activeMembership]);
+
+  useEffect(() => {
+    if (!userData?.uid) return;
+
+    const ordersQuery = query(
+      collection(db, "pendingTransactions"),
+      where("customerId", "==", userData.uid)
+    );
+
+    const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
+      const orders = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setPendingOrders(orders);
+    });
+
+    return () => unsubscribe();
+  }, [userData]);
 
   useEffect(() => {
     if (!user?.uid) {
@@ -281,7 +300,7 @@ export default function Home() {
                     <Text style={s.txAmount}>{formatIDR(t.amount ?? 0)}</Text>
                   </View>
                   <Text style={s.txPoint}>
-                    {t.pointsAwarded >= 0 ? `+1` : t.pointsAwarded} Poin
+                    {t.pointsAwarded >= 0 ? `+ ${t.pointsAwarded}` : null} Poin
                   </Text>
                 </View>
               ))

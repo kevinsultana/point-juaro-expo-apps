@@ -4,6 +4,7 @@ import { CartProvider } from "../contexts/CartContext";
 import { Platform, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
 export default function RootLayout() {
   const insets = useSafeAreaInsets();
@@ -22,6 +23,7 @@ export default function RootLayout() {
           </>
         )}
         <Stack screenOptions={{ headerShown: false }} />
+        <Toast position="top" topOffset={50} />
       </CartProvider>
     </AuthProvider>
   );
