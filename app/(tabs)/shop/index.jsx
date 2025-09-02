@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
+  TextInput,
 } from "react-native";
 
 import { useRouter } from "expo-router";
@@ -33,6 +34,7 @@ export default function Shop() {
   const [merchants, setMerchants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchText, setSearchText] = useState("");
 
   const getDataMerchants = async () => {
     setLoading(true);
@@ -53,6 +55,11 @@ export default function Shop() {
     getDataMerchants();
   }, []);
 
+  // Filter merchant berdasarkan searchText
+  const filteredMerchants = merchants.filter((m) =>
+    m.name.toLowerCase().includes(searchText.toLowerCase())
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -72,6 +79,15 @@ export default function Shop() {
           </View>
         </View>
 
+        {/* Search Bar */}
+        <TextInput
+          style={styles.searchBar}
+          placeholder="Cari toko..."
+          placeholderTextColor="#94a3b8"
+          value={searchText}
+          onChangeText={setSearchText}
+        />
+
         {loading ? (
           <ActivityIndicator
             size="large"
@@ -82,12 +98,15 @@ export default function Shop() {
           <Text style={styles.errorText}>{error}</Text>
         ) : (
           <FlatList
-            data={merchants}
+            data={filteredMerchants}
             renderItem={({ item }) => <MerchantItem merchant={item} />}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.listContainer}
             onRefresh={getDataMerchants}
             refreshing={loading}
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>Toko tidak ditemukan.</Text>
+            }
           />
         )}
       </View>
@@ -147,5 +166,22 @@ const styles = StyleSheet.create({
     color: "#fca5a5",
     textAlign: "center",
     marginTop: 20,
+  },
+  searchBar: {
+    backgroundColor: "#121a2d",
+    color: "white",
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 12,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  emptyText: {
+    color: "#94a3b8",
+    textAlign: "center",
+    marginTop: 20,
+    fontStyle: "italic",
   },
 });

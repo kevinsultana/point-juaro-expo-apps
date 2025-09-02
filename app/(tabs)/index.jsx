@@ -11,6 +11,7 @@ import {
   Dimensions,
   FlatList,
   Platform,
+  TouchableOpacity,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -35,6 +36,7 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from "react-native-reanimated";
+import { useRouter } from "expo-router";
 
 const { width: screenWidth } = Dimensions.get("window");
 const CARD_WIDTH = Math.round(screenWidth * 0.85);
@@ -131,6 +133,7 @@ export default function Home() {
   const [memberships, setMemberships] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [errorMsg, setErrorMsg] = useState("");
+  const router = useRouter();
 
   const [openTxIds, setOpenTxIds] = useState(new Set());
 
@@ -252,13 +255,16 @@ export default function Home() {
             <Image source={require("../../assets/logo.png")} />
           </View>
           <View style={s.headerActions}>
-            <Pressable style={s.iconBtn}>
+            <TouchableOpacity
+              onPress={() => router.push("/notifications")}
+              style={s.iconBtn}
+            >
               <Ionicons
                 name="notifications-outline"
                 size={20}
                 color="#0f172a"
               />
-            </Pressable>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -295,7 +301,30 @@ export default function Home() {
           </Pressable>
         </View>
 
-        {loading ? (
+        {/* Tab Content */}
+        {activeTab === "Promotion" ? (
+          <View style={s.centerContent}>
+            <Ionicons
+              name="construct-outline"
+              size={48}
+              color="#2563eb"
+              style={{ marginBottom: 16 }}
+            />
+            <Text
+              style={{
+                color: "white",
+                fontSize: 18,
+                fontWeight: "700",
+                marginBottom: 8,
+              }}
+            >
+              Promotion
+            </Text>
+            <Text style={{ color: "#94a3b8", textAlign: "center" }}>
+              Halaman ini sedang dalam pengembangan.
+            </Text>
+          </View>
+        ) : loading ? (
           <View style={s.centerContent}>
             <ActivityIndicator color="#fff" />
             <Text style={s.loadingText}>Memuat data…</Text>
