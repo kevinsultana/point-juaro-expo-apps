@@ -60,6 +60,8 @@ function TxItem({ t, isOpen, onToggle }) {
     ? t.cartItems
     : [];
 
+  console.log(JSON.stringify(t, null, 2));
+
   return (
     <Animated.View
       layout={Layout.springify().stiffness(220).damping(22)}
@@ -81,7 +83,9 @@ function TxItem({ t, isOpen, onToggle }) {
 
         <View style={{ alignItems: "flex-end", gap: 6 }}>
           <Text style={s.txPoint}>
-            {t.pointsAwarded >= 0 ? `+ ${t.pointsAwarded}` : null} Poin
+            {t.pointsAwarded > 0
+              ? `+ ${t.pointsAwarded} Points`
+              : `+ ${t.stampsAwarded} Stamps`}
           </Text>
           <Animated.View style={rotateStyle}>
             <Ionicons name="chevron-down" size={18} color="#94a3b8" />
