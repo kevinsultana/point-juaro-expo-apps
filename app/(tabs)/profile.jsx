@@ -18,17 +18,17 @@ import Toast from "react-native-toast-message";
 
 export default function Profile() {
   const router = useRouter();
-  const { userData: userProfile, initializing } = useAuth();
+  const { userData, setUserData, setUser, initializing } = useAuth();
 
   const [isEditing, setIsEditing] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (userProfile) {
-      setDisplayName(userProfile.name || userProfile.email || "");
+    if (userData) {
+      setDisplayName(userData?.name || userData?.email || "");
     }
-  }, [userProfile]);
+  }, [userData]);
 
   const handleLogout = async () => {
     try {
@@ -37,6 +37,8 @@ export default function Profile() {
         type: "success",
         text1: "Logout berhasil.",
       });
+      setUserData(null);
+      setUser(null);
       router.replace("/(auth)/sign-in");
     } catch (e) {
       Toast.show({
@@ -47,11 +49,11 @@ export default function Profile() {
   };
 
   const handleSaveName = async () => {
-    if (!userProfile || !displayName.trim()) return;
+    if (!userData || !displayName.trim()) return;
 
     setSaving(true);
     try {
-      const userDocRef = doc(db, "users", userProfile.uid);
+      const userDocRef = doc(db, "users", userData.uid);
       await updateDoc(userDocRef, {
         name: displayName.trim(),
       });
@@ -92,10 +94,10 @@ export default function Profile() {
       />
       <View style={styles.container}>
         {/* Bagian QR Code */}
-        {userProfile?.uid && (
+        {userData?.uid && (
           <View style={styles.qrSection}>
             <View style={styles.qrContainer}>
-              <QRCode value={userProfile.uid} size={160} />
+              <QRCode value={userData.uid} size={160} />
             </View>
             <Text style={styles.qrSubtitle}>Tunjukkan QR ini pada kasir</Text>
           </View>
@@ -143,7 +145,7 @@ export default function Profile() {
             <View style={styles.infoRow}>
               <View>
                 <Text style={styles.displayName}>{displayName}</Text>
-                <Text style={styles.email}>{userProfile?.email}</Text>
+                <Text style={styles.email}>{userData?.email}</Text>
               </View>
               <Pressable onPress={() => setIsEditing(true)}>
                 <Text style={styles.editButtonText}>Edit</Text>

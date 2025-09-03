@@ -15,17 +15,17 @@ import { formatIDR } from "../../utils/formatIDR";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function Orders() {
-  const { userData: userProfile } = useAuth();
+  const { userData } = useAuth();
   const [pendingOrders, setPendingOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    if (!userProfile?.uid) return;
+    if (!userData?.uid) return;
 
     const ordersQuery = query(
       collection(db, "pendingTransactions"),
-      where("customerId", "==", userProfile.uid)
+      where("customerId", "==", userData.uid)
     );
 
     const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
@@ -38,7 +38,7 @@ export default function Orders() {
     });
 
     return () => unsubscribe();
-  }, [userProfile]);
+  }, [userData]);
 
   return (
     <View style={styles.container}>

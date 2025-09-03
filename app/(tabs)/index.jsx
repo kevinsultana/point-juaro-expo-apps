@@ -60,8 +60,6 @@ function TxItem({ t, isOpen, onToggle }) {
     ? t.cartItems
     : [];
 
-  console.log(JSON.stringify(t, null, 2));
-
   return (
     <Animated.View
       layout={Layout.springify().stiffness(220).damping(22)}
@@ -271,7 +269,6 @@ export default function Home() {
             </TouchableOpacity>
           </View>
         </View>
-
         {/* Segmented tab Home / Promotion */}
         <View style={s.segmentWrap}>
           <Pressable
@@ -335,8 +332,12 @@ export default function Home() {
           </View>
         ) : memberships.length === 0 ? (
           <View style={s.centerContent}>
+            <View style={s.qrContainer}>
+              <QRCode value={userData?.uid} size={200} />
+            </View>
             <Text style={s.emptyMembershipText}>
-              Kamu belum punya membership. Scan QR toko untuk bergabung.
+              Kamu belum punya membership, silakan kunjungi merchant kami dan
+              dapatkan keuntungan spesial!
             </Text>
           </View>
         ) : (
@@ -455,6 +456,12 @@ export default function Home() {
 }
 
 const s = StyleSheet.create({
+  qrContainer: {
+    backgroundColor: "white",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
   screen: {
     flex: 1,
     backgroundColor: "#0b1222",

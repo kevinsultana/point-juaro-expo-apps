@@ -43,8 +43,8 @@ export default function SignUp() {
       );
       await setDoc(doc(db, "users", cred.user.uid), {
         email: cred.user.email,
-        createdAt: serverTimestamp(),
         role: "customer",
+        uid: cred.user.uid,
       });
       Toast.show({
         type: "success",

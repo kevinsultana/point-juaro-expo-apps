@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,12 +10,14 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  Alert,
 } from "react-native";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { auth } from "../../lib/firebase";
 import { Link, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
+import { useAuth } from "../../contexts/auth-contexts";
 
 export default function SignIn() {
   const router = useRouter();
@@ -23,6 +25,8 @@ export default function SignIn() {
   const [pass, setPass] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
+  const { userData } = useAuth();
 
   const onSubmit = async () => {
     setLoading(true);
@@ -36,12 +40,12 @@ export default function SignIn() {
     }
     try {
       await signInWithEmailAndPassword(auth, email.trim(), pass);
+      setLoginSuccess(true);
       setLoading(false);
       Toast.show({
         type: "success",
         text1: "Login berhasil.",
       });
-      router.replace("/(tabs)");
     } catch (e) {
       setLoading(false);
       Toast.show({
@@ -51,6 +55,22 @@ export default function SignIn() {
       });
     }
   };
+
+  useEffect(() => {
+    if (loginSuccess && userData) {
+      if (userData?.role === "customer") {
+        router.replace("/(tabs)");
+      } else {
+        Alert.alert("Akses ditolak", "Hanya pelanggan yang dapat masuk.", [
+          {
+            text: "OK",
+            onPress: () => signOut(auth),
+          },
+        ]);
+      }
+      setLoginSuccess(false);
+    }
+  }, [loginSuccess, userData]);
 
   return (
     <KeyboardAvoidingView

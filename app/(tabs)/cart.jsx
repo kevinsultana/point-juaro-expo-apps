@@ -19,7 +19,7 @@ import Toast from "react-native-toast-message";
 
 export default function Cart() {
   const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart();
-  const { userData: userProfile } = useAuth();
+  const { userData } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -29,7 +29,7 @@ export default function Cart() {
   );
 
   const handlePreparePayment = async () => {
-    if (!userProfile || cartItems.length === 0) {
+    if (!userData || cartItems.length === 0) {
       Toast.show({
         type: "error",
         text1: "Anda harus memiliki item di keranjang.",
@@ -43,7 +43,7 @@ export default function Cart() {
       const pendingTransactionRef = await addDoc(
         collection(db, "pendingTransactions"),
         {
-          customerId: userProfile.uid,
+          customerId: userData?.uid,
           merchantId: cartItems[0].merchantId,
           merchantName: cartItems[0].merchantName,
           items: cartItems,

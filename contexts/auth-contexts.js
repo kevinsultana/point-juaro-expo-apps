@@ -2,7 +2,6 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
 import { auth, db } from "../lib/firebase";
-import { Alert } from "react-native";
 
 const AuthContext = createContext(null);
 
@@ -29,28 +28,13 @@ export function AuthProvider({ children }) {
         return;
       }
 
-      const ref = doc(db, "users", u.uid);
+      const ref = doc(db, "users", u?.uid);
       unsubUserDoc = onSnapshot(
         ref,
         (snap) => {
           if (snap.exists()) {
             const data = { id: snap.id, ...snap.data() };
-            if (data.role !== "customer") {
-              Alert.alert(
-                "Akses Ditolak",
-                "Aplikasi ini hanya untuk pelanggan. Silakan gunakan situs web untuk Login.",
-                [
-                  {
-                    text: "OK",
-                    onPress: () => signOut(auth),
-                  },
-                ],
-                { cancelable: false }
-              );
-              setUserData(null);
-            } else {
-              setUserData(data);
-            }
+            setUserData(data);
           } else {
             signOut(auth);
             setUserData(null);
@@ -74,7 +58,15 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, userData, initializing, setPendingOrders, pendingOrders }}
+      value={{
+        user,
+        setUser,
+        userData,
+        setUserData,
+        initializing,
+        setPendingOrders,
+        pendingOrders,
+      }}
     >
       {children}
     </AuthContext.Provider>
