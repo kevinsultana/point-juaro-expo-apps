@@ -8,7 +8,6 @@ import {
   SafeAreaView,
   FlatList,
   TouchableOpacity,
-  Alert,
 } from "react-native";
 import { useLocalSearchParams, Stack, useRouter } from "expo-router";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
@@ -149,7 +148,6 @@ export default function MerchantDetail() {
   );
 }
 
-// --- Styles ---
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,

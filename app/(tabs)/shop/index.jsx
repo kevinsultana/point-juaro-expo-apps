@@ -55,7 +55,6 @@ export default function Shop() {
     getDataMerchants();
   }, []);
 
-  // Filter merchant berdasarkan searchText
   const filteredMerchants = merchants.filter((m) =>
     m.name.toLowerCase().includes(searchText.toLowerCase())
   );
